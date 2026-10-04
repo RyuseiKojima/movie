@@ -20,6 +20,11 @@ export interface SearchResponse {
     demo?: boolean;
 }
 
+export interface YearRange {
+    yearFrom: number | null;
+    yearTo: number | null;
+}
+
 export interface RecommendResponse {
     movie: Movie;
     confidence: number;
@@ -30,6 +35,6 @@ export interface ConfigResponse {
     jev: boolean;
 }
 
-export type Tab = 'search' | 'library' | 'recommend';
+export type Tab = 'search' | 'library';
 
 export const isSameMovie = (a: Movie, b: Movie) => a.id === b.id && Boolean(a.demo) === Boolean(b.demo);
