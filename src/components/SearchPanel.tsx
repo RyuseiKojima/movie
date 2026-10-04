@@ -15,25 +15,32 @@ export function SearchPanel({ hidden, notify, onConfig, isSaved, onAdd }: Props)
     const [query, setQuery] = useState('');
     const [title, setTitle] = useState('いま注目の映画');
     const [results, setResults] = useState<Movie[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const started = useRef(false);
 
     async function search(text: string) {
         setLoading(true);
-        notify('映画を探しています…');
+        setError('');
+        notify('');
         try {
             const data = await searchMovies(text);
             setTitle(text.trim() ? '検索結果' : 'いま注目の映画');
             setResults(data.results.map(movie => ({ ...movie, demo: Boolean(data.demo) })));
             notify(data.demo ? 'デモモード：架空のサンプル作品を表示しています。実際の映画検索にはTMDBのAPIキーを設定してください。' : `${data.results.length}件の映画が見つかりました。`);
-        } catch (error) { notify((error as Error).message); }
-        finally { setLoading(false); }
+        } catch (error) {
+            setResults([]);
+            setError((error as Error).message);
+        } finally { setLoading(false); }
     }
 
     useEffect(() => {
         if (started.current) return;
         started.current = true;
-        fetchConfig().then(config => { onConfig(config.demo); search(''); }).catch((error: Error) => notify(error.message));
+        fetchConfig().then(config => { onConfig(config.demo); search(''); }).catch((error: Error) => {
+            setError(error.message);
+            setLoading(false);
+        });
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     function handleSubmit(event: FormEvent) {
@@ -49,8 +56,11 @@ export function SearchPanel({ hidden, notify, onConfig, isSaved, onAdd }: Props)
                 <button className="primary" disabled={loading}>検索する</button>
             </form>
             <h2>{title}</h2>
-            <div className="grid">
-                {results.map(movie => <CandidateCard key={movie.id} movie={movie} saved={isSaved(movie)} onAdd={onAdd} />)}
+            <div className="grid" aria-busy={loading}>
+                {loading ? <p className="empty" role="status">映画を探しています…</p>
+                    : error ? <p className="empty error" role="alert">{error}</p>
+                    : results.length ? results.map(movie => <CandidateCard key={movie.id} movie={movie} saved={isSaved(movie)} onAdd={onAdd} />)
+                    : <p className="empty">該当する映画が見つかりませんでした。別のタイトルで検索してください。</p>}
             </div>
         </section>
     );

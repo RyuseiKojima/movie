@@ -15,17 +15,19 @@ export function RecommendPanel({ hidden, library, notify, isSaved, onAdd }: Prop
     const [mood, setMood] = useState('');
     const [suggestion, setSuggestion] = useState<Movie | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     async function handleSubmit(event: FormEvent) {
         event.preventDefault();
         setLoading(true);
+        setError('');
         setSuggestion(null);
-        notify('Jevが次の一本を選んでいます…');
+        notify('');
         try {
             const result = await recommendMovie(mood, library);
             setSuggestion(result.movie);
             notify(`Jevが選んだ一本です。モデルの確信度：${Math.round(result.confidence * 100)}%（満足度の保証ではありません）`);
-        } catch (error) { notify((error as Error).message); }
+        } catch (error) { setError((error as Error).message); }
         finally { setLoading(false); }
     }
 
@@ -42,7 +44,9 @@ export function RecommendPanel({ hidden, library, notify, isSaved, onAdd }: Prop
                 </form>
                 <p className="muted">評価・メモ・気分は提案時にTypeSafe AIへ送信されます。</p>
             </div>
-            <div className="grid">
+            <div className="grid" aria-busy={loading}>
+                {loading && <p className="empty" role="status">Jevが次の一本を選んでいます…</p>}
+                {error && <p className="empty error" role="alert">{error}</p>}
                 {suggestion && <CandidateCard movie={suggestion} saved={isSaved(suggestion)} onAdd={onAdd} />}
             </div>
         </section>
