@@ -3,6 +3,7 @@ package main
 import (
     "encoding/json"
     "errors"
+    "fmt"
     "io"
     "io/fs"
     "net/http"
@@ -11,6 +12,9 @@ import (
     "path"
     "strings"
 )
+
+// The library (up to 500 movies) and up to 100 candidates with overviews are sent together.
+const maxRecommendBytes = 1_000_000
 
 type app struct {
     cfg        config
@@ -62,33 +66,65 @@ func (a *app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             writeError(w, 400, "検索語は200文字以内で入力してください。")
             return
         }
+        yearFrom, yearTo, err := parseYearRange(r.URL.Query())
+        if err != nil {
+            writeError(w, 400, err.Error())
+            return
+        }
+        inRange := func(candidate movie) bool { return inYearRange(candidate, yearFrom, yearTo) }
         if a.cfg.TMDBToken == "" {
             results := make([]movie, 0)
             for _, candidate := range demoMovies {
-                if query == "" || strings.Contains(candidate.Title, query) {
+                if (query == "" || strings.Contains(candidate.Title, query)) && inRange(candidate) {
                     results = append(results, candidate)
                 }
             }
             writeJSON(w, 200, map[string]any{"results": results, "demo": true})
             return
         }
-        endpoint := "movie/popular"
-        params := url.Values{}
-        if query != "" {
-            endpoint = "search/movie"
-            params.Set("query", query)
+        if query == "" {
+            // A random sample of popular movies, narrowed by release date when years are given.
+            path, params := "movie/popular", url.Values{}
+            if yearFrom != nil || yearTo != nil {
+                path = "discover/movie"
+                params.Set("sort_by", "popularity.desc")
+                if yearFrom != nil {
+                    params.Set("primary_release_date.gte", fmt.Sprintf("%04d-01-01", *yearFrom))
+                }
+                if yearTo != nil {
+                    params.Set("primary_release_date.lte", fmt.Sprintf("%04d-12-31", *yearTo))
+                }
+            }
+            results, err := a.fetchMovies(r.Context(), path, params, func(movie) bool { return true })
+            if err != nil {
+                writeError(w, 400, err.Error())
+                return
+            }
+            writeJSON(w, 200, map[string]any{"results": results})
+            return
         }
-        var data json.RawMessage
-        if err := a.tmdb(r.Context(), endpoint, params, &data); err != nil {
+        params := url.Values{}
+        params.Set("query", query)
+        var data struct {
+            Results []movie `json:"results"`
+        }
+        if err := a.tmdb(r.Context(), "search/movie", params, &data); err != nil {
             writeError(w, 400, err.Error())
             return
         }
-        writeJSON(w, 200, data)
+        // TMDB search accepts only a single year, so filter ranges locally.
+        results := make([]movie, 0, len(data.Results))
+        for _, candidate := range data.Results {
+            if inRange(candidate) {
+                results = append(results, candidate)
+            }
+        }
+        writeJSON(w, 200, map[string]any{"results": results})
     case "/api/recommend":
         if !requireMethod(w, r, http.MethodPost) {
             return
         }
-        body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 100000))
+        body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxRecommendBytes))
         if err != nil {
             var tooLarge *http.MaxBytesError
             if errors.As(err, &tooLarge) {

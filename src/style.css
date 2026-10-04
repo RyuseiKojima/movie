@@ -47,6 +47,12 @@ h3 { margin: 10px 0; font-size: 17px; }
 .recommend-box form { flex-direction: column; }
 .recommend-box textarea { min-height: 130px; resize: vertical; }
 .recommend-box .primary { align-self: flex-start; }
+.search-form { flex-wrap: wrap; }
+.search-form #query { flex: 1 1 260px; }
+.year-range { display: flex; align-items: center; gap: 8px; border: 0; margin: 0; padding: 0; color: #a4ada2; }
+.year-range input { flex: 0 1 110px; }
+.recommend-box .grid { margin-top: 20px; }
+.recommend-box .empty { padding: 10px 0; }
 .recommend-box > p { line-height: 1.8; }
 .empty { grid-column: 1 / -1; padding: 50px 0; color: #a4ada2; }
 .empty.error { color: #e0a99a; }

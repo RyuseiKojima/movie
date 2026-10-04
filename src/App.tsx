@@ -1,14 +1,12 @@
 import { useCallback, useState } from 'react';
 import { LibraryPanel } from './components/LibraryPanel';
-import { RecommendPanel } from './components/RecommendPanel';
 import { SearchPanel } from './components/SearchPanel';
 import { useLibrary } from './hooks/useLibrary';
 import type { Movie, Tab } from './types';
 
 const tabs: { id: Tab; label: string }[] = [
     { id: 'search', label: '映画を探す' },
-    { id: 'library', label: '私の映画棚' },
-    { id: 'recommend', label: 'Jevで次の一本' }
+    { id: 'library', label: '私の映画棚' }
 ];
 
 export function App() {
@@ -45,9 +43,8 @@ export function App() {
                     ))}
                 </nav>
                 <p id="notice" role="status">{notice}</p>
-                <SearchPanel hidden={tab !== 'search'} notify={notify} onConfig={setDemo} isSaved={has} onAdd={handleAdd} />
+                <SearchPanel hidden={tab !== 'search'} library={library} notify={notify} onConfig={setDemo} isSaved={has} onAdd={handleAdd} />
                 <LibraryPanel hidden={tab !== 'library'} library={library} onUpdate={update} onRemove={remove} />
-                <RecommendPanel hidden={tab !== 'recommend'} library={library} notify={notify} isSaved={has} onAdd={handleAdd} />
             </main>
             <footer>
                 <p>映画情報：<a href="https://www.themoviedb.org/" target="_blank" rel="noreferrer">TMDB</a></p>
