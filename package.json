@@ -5,9 +5,10 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc --noEmit && vite build",
-        "start": "node --env-file-if-exists=.env server.js",
+        "start": "go run ./backend",
         "pretest": "npm run build",
-        "test": "node --test"
+        "test": "go test -race ./...",
+        "build:server": "go build -o bin/movie-shelf ./backend"
     },
     "engines": {
         "node": ">=22"
