@@ -49,6 +49,7 @@ h3 { margin: 10px 0; font-size: 17px; }
 .recommend-box .primary { align-self: flex-start; }
 .recommend-box > p { line-height: 1.8; }
 .empty { grid-column: 1 / -1; padding: 50px 0; color: #a4ada2; }
+.empty.error { color: #e0a99a; }
 footer { margin-top: 60px; border-top: 1px solid #343932; line-height: 1.8; font-size: 11px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 :focus-visible { outline: 2px solid #c5db8d; outline-offset: 3px; }
