@@ -53,3 +53,37 @@ test('Jevには未登録候補だけを渡し、候補外の応答を拒否す�
         }
     }
 });
+
+test('TMDBのAPIキーとRead Access Tokenで認証方式を切り替える', async () => {
+    const originalFetch = globalThis.fetch;
+    const previousToken = process.env.TMDB_ACCESS_TOKEN;
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const base = `http://127.0.0.1:${server.address().port}`;
+    try {
+        for (const credential of ['a'.repeat(32), 'test.read.token']) {
+            process.env.TMDB_ACCESS_TOKEN = credential;
+            let inspected = false;
+            globalThis.fetch = async (url, options = {}) => {
+                const parsed = new URL(url);
+                if (parsed.hostname !== 'api.themoviedb.org') return originalFetch(url, options);
+                inspected = true;
+                if (credential.length === 32) {
+                    assert.equal(parsed.searchParams.get('api_key'), credential);
+                    assert.equal(options.headers?.Authorization, undefined);
+                } else {
+                    assert.equal(parsed.searchParams.has('api_key'), false);
+                    assert.equal(options.headers.Authorization, `Bearer ${credential}`);
+                }
+                return { ok: true, json: async () => ({ results: [] }) };
+            };
+            const response = await originalFetch(`${base}/api/search?q=test`);
+            assert.equal(response.status, 200);
+            assert.equal(inspected, true);
+        }
+    } finally {
+        globalThis.fetch = originalFetch;
+        if (previousToken === undefined) delete process.env.TMDB_ACCESS_TOKEN;
+        else process.env.TMDB_ACCESS_TOKEN = previousToken;
+        await new Promise(resolve => server.close(resolve));
+    }
+});

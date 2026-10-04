@@ -13,7 +13,7 @@ http://localhost:3000 を開いてください。APIキー未設定でも架空�
 
 `.env` に以下を設定し、サーバーを再起動してください。
 
-- `TMDB_ACCESS_TOKEN`: TMDBアカウントの設定 → APIから取得するAPI Read Access Token。日本語タイトル検索・ポスター・人気作品に使用します。
+- `TMDB_ACCESS_TOKEN`: TMDBアカウントの設定 → APIから取得するAPI Read Access Token、または32文字のAPIキー。値の形式から認証方式を自動で選択します。日本語タイトル検索・ポスター・人気作品に使用します。
 - `TYPESAFE_API_KEY`: TypeSafe AIのAPIキー。Jevによる提案に使用します。
 - `JEV_MODEL`: 既定は `jev-latest`。利用可能なモデルはTypeSafeの `/v1/models` で確認できます。
 

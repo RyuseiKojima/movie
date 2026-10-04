@@ -17,7 +17,12 @@ async function requestJson(url, options = {}) {
 async function tmdb(path, params = {}) {
     const url = new URL(`https://api.themoviedb.org/3/${path}`);
     for (const [key, value] of Object.entries({ language: 'ja-JP', include_adult: 'false', ...params })) url.searchParams.set(key, value);
-    return requestJson(url, { headers: { Authorization: `Bearer ${process.env.TMDB_ACCESS_TOKEN}` } });
+    const credential = (process.env.TMDB_ACCESS_TOKEN || '').trim();
+    if (/^[a-f0-9]{32}$/i.test(credential)) {
+        url.searchParams.set('api_key', credential);
+        return requestJson(url);
+    }
+    return requestJson(url, { headers: { Authorization: `Bearer ${credential}` } });
 }
 
 export async function recommend({ mood, library }, fetcher = requestJson) {
