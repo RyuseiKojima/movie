@@ -1,6 +1,10 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+const distDir = new URL('./dist/', import.meta.url);
+const staticTypes = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
 export const demoMovies = [
     { id: 1, title: '星をめぐる旅', overview: '遠い星を目指す探検家と、地球で待つ家族の物語。', release_date: '2024-01-01', genre_ids: [878], vote_average: 8.2 },
@@ -76,10 +80,13 @@ export const server = http.createServer(async (req, res) => {
             }
             return json(200, await recommend(JSON.parse(body)));
         }
-        const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
-        if (!files[url.pathname]) return json(404, { error: '見つかりません。' });
-        const [name, type] = files[url.pathname];
-        const content = await readFile(new URL(`./public/${name}`, import.meta.url));
+        const name = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+        const file = new URL(name, distDir);
+        const type = staticTypes[extname(name)];
+        if (!type || !file.href.startsWith(distDir.href)) return json(404, { error: '見つかりません。' });
+        let content;
+        try { content = await readFile(file); }
+        catch { return json(404, { error: '見つかりません。' }); }
         res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8`, 'X-Content-Type-Options': 'nosniff' });
         res.end(content);
     } catch (error) {

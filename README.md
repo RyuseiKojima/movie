@@ -1,13 +1,22 @@
 # Movie Shelf
 
-映画を検索し、観たい・鑑賞済みの記録と評価・感想を残す日本語Webアプリです。Node.js 22以上を使用します。依存パッケージのインストールは不要です。
+映画を検索し、観たい・鑑賞済みの記録と評価・感想を残す日本語Webアプリです。Node.js 22以上を使用します。フロントエンドはReact + TypeScript（Vite）、サーバーはNode.js標準モジュールのみで構成しています。
 
 ```sh
 cp .env.example .env
+npm install
+npm run build
 npm start
 ```
 
 http://localhost:3000 を開いてください。APIキー未設定でも架空の3作品で登録操作を試せます。
+
+### 開発
+
+`npm start` でAPIサーバーを起動したまま、別のターミナルで `npm run dev` を実行するとViteの開発サーバー（http://localhost:5173 ）が起動します。`/api` へのリクエストはポート3000のサーバーへプロキシされます。
+
+- `src/` — Reactコンポーネント（`components/`）、localStorage連携（`hooks/useLibrary.ts`）、API呼び出し（`api.ts`）、型定義（`types.ts`）
+- `server.js` — API と `dist/` のビルド成果物の配信
 
 ## API設定
 
@@ -28,6 +37,8 @@ TMDBは非商用利用では出典表示を条件に無料です。商用利用�
 ```sh
 npm test
 ```
+
+型チェックとビルドを実行してからサーバーのテストを行います。
 
 ## 公式資料
 
