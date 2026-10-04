@@ -10,7 +10,7 @@
 
 
 
-- Next.js、TypeScript、Goを使用する。
+- Vite、TypeScript、Goを使用する。
 
 - 映画検索にはTMDBを使用する。
 
